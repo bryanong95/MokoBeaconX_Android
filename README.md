@@ -2,6 +2,8 @@
 
 ----
 
+# Credit from : https://github.com/MokoBeaconX/MokoBeaconX_Android
+
 ## 1. Import project
 
 **1.1 Import "Module mokosupport" to root directory**
