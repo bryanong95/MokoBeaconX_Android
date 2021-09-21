@@ -15,6 +15,7 @@ import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.moko.beaconx.AppConstants;
@@ -44,6 +45,8 @@ import com.moko.support.utils.MokoUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -60,6 +63,17 @@ import androidx.recyclerview.widget.RecyclerView;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+
+import java.io.IOException;
+import java.util.function.Consumer;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 
 public class MainActivity extends BaseActivity implements MokoScanDeviceCallback, BaseQuickAdapter.OnItemChildClickListener {
@@ -80,6 +94,14 @@ public class MainActivity extends BaseActivity implements MokoScanDeviceCallback
     private HashMap<String, BeaconXInfo> beaconXInfoHashMap;
     private ArrayList<BeaconXInfo> beaconXInfos;
     private BeaconXListAdapter adapter;
+
+    //private String ip = "13.212.114.205";
+    //private String url = "http://" + ip + ":" + 5000 + "/post";
+    private String ip = "192.168.1.81";
+    private String url = "http://" + ip + ":" + 5000 + "/api/v1/resources/books/all";
+    private String postBodyString;
+    private MediaType mediaType;
+    private RequestBody requestBody;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -313,6 +335,22 @@ public class MainActivity extends BaseActivity implements MokoScanDeviceCallback
                 return 0;
             }
         });
+        getSendToFlask(beaconXInfos);
+    }
+
+    private void getSendToFlask(ArrayList<BeaconXInfo> beaconXInfos){
+        JSONObject device = new JSONObject();
+        for (BeaconXInfo beacon: beaconXInfos) {
+            try{
+                device.put("MAC_ADD",beacon.mac);
+                device.put("RSSI",beacon.rssi);
+                device.put("STAFF_ID",1);
+            } catch (JSONException J){
+                J.printStackTrace();
+            }
+        }
+        //System.out.println(device.toString());
+        postRequest(device.toString(),url);
     }
 
 
@@ -518,5 +556,52 @@ public class MainActivity extends BaseActivity implements MokoScanDeviceCallback
         @Override
         protected void handleMessage(MainActivity activity, Message msg) {
         }
+    }
+
+    private RequestBody buildRequestBody(String json) {
+        postBodyString = json;
+        mediaType = MediaType.parse("application/json; charset=utf-8");
+        requestBody = RequestBody.create(postBodyString, mediaType);
+        return requestBody;
+    }
+
+    private void postRequest(String json, String URL) {
+        System.out.println(URL);
+        RequestBody requestBody = buildRequestBody(json);
+        OkHttpClient okHttpClient = new OkHttpClient();
+        Request request = new Request
+                .Builder()
+                .post(requestBody)
+                .url(URL)
+                .build();
+        okHttpClient.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(final Call call, final IOException e) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(MainActivity.this, "Something went wrong:" + " " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        call.cancel();
+                    }
+                });
+
+            }
+            @Override
+            public void onResponse(Call call, final Response response) throws IOException {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            Toast.makeText(MainActivity.this, response.body().string(), Toast.LENGTH_LONG).show();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+
+                    }
+                });
+
+
+            }
+        });
     }
 }
