@@ -48,11 +48,13 @@ import org.greenrobot.eventbus.ThreadMode;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -66,6 +68,8 @@ import butterknife.OnClick;
 
 import java.io.IOException;
 import java.util.function.Consumer;
+import java.util.Date;
+import java.text.SimpleDateFormat;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -96,12 +100,14 @@ public class MainActivity extends BaseActivity implements MokoScanDeviceCallback
     private BeaconXListAdapter adapter;
 
     //private String ip = "13.212.114.205";
-    //private String url = "http://" + ip + ":" + 5000 + "/post";
-    private String ip = "192.168.1.81";
-    private String url = "http://" + ip + ":" + 5000 + "/api/v1/resources/books/all";
+    private String ip = "192.168.16.240";
+    private String url = "http://" + ip + ":" + 5000 + "/post";
     private String postBodyString;
     private MediaType mediaType;
     private RequestBody requestBody;
+    private Timestamp time;
+
+    private static final SimpleDateFormat tf = new SimpleDateFormat("HH:mm:ss:SSS");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -261,6 +267,9 @@ public class MainActivity extends BaseActivity implements MokoScanDeviceCallback
     public void onStartScan() {
         beaconXInfoHashMap.clear();
         new Thread(() -> {
+            //Date date = new Date();
+            //System.out.println(new Timestamp(date.getTime()));
+            //System.out.println("start" + tf.format(date.getTime()));
             while (animation != null) {
                 runOnUiThread(() -> {
                     adapter.replaceData(beaconXInfos);
@@ -272,6 +281,7 @@ public class MainActivity extends BaseActivity implements MokoScanDeviceCallback
                     e.printStackTrace();
                 }
                 updateDevices();
+                //System.out.println("end" + tf.format(date.getTime()));
             }
         }).start();
     }
@@ -286,6 +296,7 @@ public class MainActivity extends BaseActivity implements MokoScanDeviceCallback
         }
         beaconXInfoHashMap.put(beaconXInfo.mac, beaconXInfo);
     }
+
 
     @Override
     public void onStopScan() {
@@ -339,18 +350,19 @@ public class MainActivity extends BaseActivity implements MokoScanDeviceCallback
     }
 
     private void getSendToFlask(ArrayList<BeaconXInfo> beaconXInfos){
-        JSONObject device = new JSONObject();
+        ArrayList<JSONObject> Beacon = new ArrayList<JSONObject>();
         for (BeaconXInfo beacon: beaconXInfos) {
+            JSONObject device = new JSONObject();
             try{
                 device.put("MAC_ADD",beacon.mac);
                 device.put("RSSI",beacon.rssi);
                 device.put("STAFF_ID",1);
+                Beacon.add(device);
             } catch (JSONException J){
                 J.printStackTrace();
             }
         }
-        //System.out.println(device.toString());
-        postRequest(device.toString(),url);
+        postRequest(Beacon.toString(),url);
     }
 
 
@@ -482,6 +494,7 @@ public class MainActivity extends BaseActivity implements MokoScanDeviceCallback
             @Override
             public void run() {
                 MokoSupport.getInstance().stopScanDevice();
+                //startScan();
             }
         }, 1000 * 60);
     }
