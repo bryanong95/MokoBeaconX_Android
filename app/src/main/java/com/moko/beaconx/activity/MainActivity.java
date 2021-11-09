@@ -363,15 +363,19 @@ public class MainActivity extends BaseActivity implements MokoScanDeviceCallback
     private void getSendToFlask(ArrayList<BeaconXInfo> beaconXInfos){
         ArrayList<JSONObject> Beacon = new ArrayList<JSONObject>();
         url = "http://" + ip + ":" + 5000 + "/post";
+        int count = 0;
         for (BeaconXInfo beacon: beaconXInfos) {
-            JSONObject device = new JSONObject();
-            try{
-                device.put("MAC_ADD",beacon.mac);
-                device.put("RSSI",beacon.rssi);
-                device.put("STAFF_ID",staffid);
-                Beacon.add(device);
-            } catch (JSONException J){
-                J.printStackTrace();
+            if(count < 5){
+                JSONObject device = new JSONObject();
+                try{
+                    device.put("MAC_ADD",beacon.mac);
+                    device.put("RSSI",beacon.rssi);
+                    device.put("STAFF_ID",staffid);
+                    Beacon.add(device);
+                } catch (JSONException J){
+                    J.printStackTrace();
+                }
+                count = count+1;
             }
         }
         System.out.println(Beacon);
@@ -519,6 +523,7 @@ public class MainActivity extends BaseActivity implements MokoScanDeviceCallback
                     mHandler.removeMessages(0);
                     MokoSupport.getInstance().stopScanDevice();
                     isScan = false;
+                    adapter.replaceData(beaconXInfos);
                 }
                 break;
         }
