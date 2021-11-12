@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -37,33 +36,18 @@
             android:paddingLeft="16dp"
             android:paddingRight="16dp"
             android:src="@drawable/about" />
-
     </RelativeLayout>
-
-    <Button
-        android:id="@+id/rl_edituser"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Sign In To Start" />
-
-    <Button
-        android:id="@+id/rl_log_out"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Log Out"
-        android:visibility="gone" />
 
     <RelativeLayout
         android:id="@+id/rl_edit_filter"
         android:layout_width="match_parent"
         android:layout_height="40dp"
         android:layout_marginLeft="10dp"
-        android:layout_marginTop="10dp"
         android:layout_marginRight="10dp"
+        android:layout_marginTop="10dp"
         android:background="@drawable/shape_radius_white_bg"
         android:paddingLeft="10dp"
-        android:paddingRight="10dp"
-        android:visibility="gone">
+        android:paddingRight="10dp">
 
         <TextView
             android:layout_width="wrap_content"
@@ -88,8 +72,8 @@
         android:layout_width="match_parent"
         android:layout_height="40dp"
         android:layout_marginLeft="10dp"
-        android:layout_marginTop="10dp"
         android:layout_marginRight="10dp"
+        android:layout_marginTop="10dp"
         android:background="@drawable/shape_radius_white_bg"
         android:paddingLeft="10dp"
         android:visibility="gone">
@@ -113,20 +97,6 @@
             android:src="@drawable/filter_delete" />
 
     </RelativeLayout>
-
-    <TextView
-        android:id="@+id/rl_ip_add"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="null"
-        android:visibility="gone" />
-
-    <TextView
-        android:id="@+id/rl_staff_id"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="null"
-        android:visibility="gone" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_devices"

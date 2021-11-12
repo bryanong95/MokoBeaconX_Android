@@ -12,7 +12,6 @@ import android.text.TextUtils;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -26,7 +25,6 @@ import com.moko.beaconx.dialog.LoadingDialog;
 import com.moko.beaconx.dialog.LoadingMessageDialog;
 import com.moko.beaconx.dialog.PasswordDialog;
 import com.moko.beaconx.dialog.ScanFilterDialog;
-import com.moko.beaconx.dialog.UserInformationDialog;
 import com.moko.beaconx.entity.BeaconXInfo;
 import com.moko.beaconx.utils.BeaconXInfoParseableImpl;
 import com.moko.beaconx.utils.ToastUtils;
@@ -45,7 +43,6 @@ import com.moko.support.task.OrderTaskResponse;
 import com.moko.support.utils.MokoUtils;
 
 import org.greenrobot.eventbus.EventBus;
-import org.greenrobot.eventbus.Logger;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 import org.json.JSONException;
@@ -57,6 +54,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -69,6 +67,8 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 
 import java.io.IOException;
+import java.util.function.Consumer;
+import java.util.Date;
 import java.text.SimpleDateFormat;
 
 import okhttp3.Call;
@@ -95,21 +95,13 @@ public class MainActivity extends BaseActivity implements MokoScanDeviceCallback
     RelativeLayout rl_filter;
     @BindView(R.id.tv_filter)
     TextView tv_filter;
-    @BindView(R.id.rl_log_out)
-    Button log_out;
-    @BindView(R.id.rl_edituser)
-    Button rl_edituser;
     private HashMap<String, BeaconXInfo> beaconXInfoHashMap;
     private ArrayList<BeaconXInfo> beaconXInfos;
     private BeaconXListAdapter adapter;
 
     //private String ip = "13.212.114.205";
-    //private String ip = "192.168.1.81";
-    public String ip = null;
-    public String staffid = null;
-    private Boolean isScan = true;
-    private Boolean isSending = true;
-    private String url;
+    private String ip = "192.168.16.240";
+    private String url = "http://" + ip + ":" + 5000 + "/post";
     private String postBodyString;
     private MediaType mediaType;
     private RequestBody requestBody;
@@ -138,7 +130,7 @@ public class MainActivity extends BaseActivity implements MokoScanDeviceCallback
         IntentFilter filter = new IntentFilter();
         filter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
         registerReceiver(mReceiver, filter);
-        if (animation == null && ip != null && staffid != null) {
+        if (animation == null) {
             startScan();
         }
     }
@@ -150,7 +142,7 @@ public class MainActivity extends BaseActivity implements MokoScanDeviceCallback
             dismissLoadingProgressDialog();
             dismissLoadingMessageDialog();
             ToastUtils.showToast(MainActivity.this, "Disconnected");
-            if (animation == null && ip != null && staffid != null) {
+            if (animation == null) {
                 startScan();
             }
         }
@@ -188,7 +180,7 @@ public class MainActivity extends BaseActivity implements MokoScanDeviceCallback
                             unLockResponse = "";
                             MokoSupport.getInstance().disConnectBle();
                             ToastUtils.showToast(MainActivity.this, "Password error");
-                            if (animation == null && ip != null && staffid != null) {
+                            if (animation == null) {
                                 startScan();
                             }
                         } else {
@@ -248,7 +240,7 @@ public class MainActivity extends BaseActivity implements MokoScanDeviceCallback
             switch (requestCode) {
                 case MokoConstants.REQUEST_CODE_ENABLE_BT:
                 case AppConstants.REQUEST_CODE_DEVICE_INFO:
-                    if (animation == null && ip != null && staffid != null) {
+                    if (animation == null) {
                         startScan();
                     }
                     break;
@@ -268,10 +260,6 @@ public class MainActivity extends BaseActivity implements MokoScanDeviceCallback
         super.onDestroy();
         unregisterReceiver(mReceiver);
         EventBus.getDefault().unregister(this);
-        isScan = false;
-        if(isSending == false){
-            System.exit(0);
-        }
     }
 
 
@@ -293,6 +281,7 @@ public class MainActivity extends BaseActivity implements MokoScanDeviceCallback
                     e.printStackTrace();
                 }
                 updateDevices();
+                //System.out.println("end" + tf.format(date.getTime()));
             }
         }).start();
     }
@@ -362,19 +351,17 @@ public class MainActivity extends BaseActivity implements MokoScanDeviceCallback
 
     private void getSendToFlask(ArrayList<BeaconXInfo> beaconXInfos){
         ArrayList<JSONObject> Beacon = new ArrayList<JSONObject>();
-        url = "http://" + ip + ":" + 5000 + "/post";
         for (BeaconXInfo beacon: beaconXInfos) {
             JSONObject device = new JSONObject();
             try{
                 device.put("MAC_ADD",beacon.mac);
                 device.put("RSSI",beacon.rssi);
-                device.put("STAFF_ID",staffid);
+                device.put("STAFF_ID",1);
                 Beacon.add(device);
             } catch (JSONException J){
                 J.printStackTrace();
             }
         }
-        System.out.println(Beacon);
         postRequest(Beacon.toString(),url);
     }
 
@@ -410,7 +397,7 @@ public class MainActivity extends BaseActivity implements MokoScanDeviceCallback
     public String filterName;
     public int filterRssi = -127;
 
-    @OnClick({R.id.iv_refresh, R.id.iv_about, R.id.rl_edit_filter, R.id.rl_filter, R.id.iv_filter_delete,R.id.rl_edituser,R.id.rl_log_out})
+    @OnClick({R.id.iv_refresh, R.id.iv_about, R.id.rl_edit_filter, R.id.rl_filter, R.id.iv_filter_delete})
     public void onViewClicked(View view) {
         switch (view.getId()) {
             case R.id.iv_refresh:
@@ -420,7 +407,7 @@ public class MainActivity extends BaseActivity implements MokoScanDeviceCallback
                     startActivityForResult(enableBtIntent, MokoConstants.REQUEST_CODE_ENABLE_BT);
                     return;
                 }
-                if (animation == null && ip != null && staffid != null) {
+                if (animation == null) {
                     startScan();
                 } else {
                     mHandler.removeMessages(0);
@@ -461,7 +448,7 @@ public class MainActivity extends BaseActivity implements MokoScanDeviceCallback
                             rl_filter.setVisibility(View.GONE);
                             rl_edit_filter.setVisibility(View.VISIBLE);
                         }
-                        if (animation == null && ip != null && staffid != null) {
+                        if (animation == null) {
                             startScan();
                         }
                     }
@@ -485,40 +472,8 @@ public class MainActivity extends BaseActivity implements MokoScanDeviceCallback
                 rl_edit_filter.setVisibility(View.VISIBLE);
                 filterName = "";
                 filterRssi = -127;
-                if (animation == null && ip != null && staffid != null) {
+                if (animation == null) {
                     startScan();
-                }
-                break;
-
-            case R.id.rl_edituser:
-                UserInformationDialog userinformationDialog = new UserInformationDialog(this);
-                userinformationDialog.setOnUserInformationListener(new UserInformationDialog.OnUserInformationListener() {
-                    @Override
-                    public void onDone(String ipAdd, String staffId) {
-                        rl_edit_filter.setVisibility(View.VISIBLE);
-                        log_out.setVisibility(View.VISIBLE);
-                        rl_edituser.setVisibility(View.GONE);
-                        if(ipAdd != "" && staffId != ""){
-                            MainActivity.this.ip = ipAdd;
-                            MainActivity.this.staffid = staffId;
-                        }
-                        if (animation == null && ip != null && staffid != null) {
-                            startScan();
-                        }
-                    }
-                });
-                userinformationDialog.show();
-                break;
-            case R.id.rl_log_out:
-                rl_edit_filter.setVisibility(View.GONE);
-                log_out.setVisibility(View.GONE);
-                rl_edituser.setVisibility(View.VISIBLE);
-                MainActivity.this.ip = null;
-                MainActivity.this.staffid = null;
-                if (animation != null) {
-                    mHandler.removeMessages(0);
-                    MokoSupport.getInstance().stopScanDevice();
-                    isScan = false;
                 }
                 break;
         }
@@ -539,14 +494,7 @@ public class MainActivity extends BaseActivity implements MokoScanDeviceCallback
             @Override
             public void run() {
                 MokoSupport.getInstance().stopScanDevice();
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                if(isScan == true) {
-                    startScan();
-                }
+                //startScan();
             }
         }, 1000 * 60);
     }
@@ -588,7 +536,7 @@ public class MainActivity extends BaseActivity implements MokoScanDeviceCallback
 
                 @Override
                 public void onDismiss() {
-                    if (animation == null && ip != null && staffid != null) {
+                    if (animation == null) {
                         startScan();
                     }
                 }
@@ -630,11 +578,10 @@ public class MainActivity extends BaseActivity implements MokoScanDeviceCallback
         return requestBody;
     }
 
-    private void postRequest(String json, String URL){
+    private void postRequest(String json, String URL) {
         System.out.println(URL);
         RequestBody requestBody = buildRequestBody(json);
         OkHttpClient okHttpClient = new OkHttpClient();
-        long start = System.currentTimeMillis();
         Request request = new Request
                 .Builder()
                 .post(requestBody)
@@ -648,7 +595,6 @@ public class MainActivity extends BaseActivity implements MokoScanDeviceCallback
                     public void run() {
                         Toast.makeText(MainActivity.this, "Something went wrong:" + " " + e.getMessage(), Toast.LENGTH_SHORT).show();
                         call.cancel();
-                        isSending = false;
                     }
                 });
 
@@ -658,18 +604,17 @@ public class MainActivity extends BaseActivity implements MokoScanDeviceCallback
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-//                        try {
-//                            Toast.makeText(MainActivity.this, response.body().string(), Toast.LENGTH_LONG).show();
-//                        } catch (IOException e) {
-//                            e.printStackTrace();
-//                        }
-                        System.out.println(response.toString());
-                        isSending = true;
+                        try {
+                            Toast.makeText(MainActivity.this, response.body().string(), Toast.LENGTH_LONG).show();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+
                     }
                 });
+
+
             }
         });
-        long end = System.currentTimeMillis();
-        System.out.println("Round trip response time = " + (end-start) + " millis");
     }
 }
