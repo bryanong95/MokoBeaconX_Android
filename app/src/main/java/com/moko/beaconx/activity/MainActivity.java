@@ -103,8 +103,6 @@ public class MainActivity extends BaseActivity implements MokoScanDeviceCallback
     private ArrayList<BeaconXInfo> beaconXInfos;
     private BeaconXListAdapter adapter;
 
-    //private String ip = "13.212.114.205";
-    //private String ip = "192.168.1.81";
     public String ip = null;
     public String staffid = null;
     private Boolean isScan = true;
@@ -279,16 +277,13 @@ public class MainActivity extends BaseActivity implements MokoScanDeviceCallback
     public void onStartScan() {
         beaconXInfoHashMap.clear();
         new Thread(() -> {
-            //Date date = new Date();
-            //System.out.println(new Timestamp(date.getTime()));
-            //System.out.println("start" + tf.format(date.getTime()));
             while (animation != null) {
                 runOnUiThread(() -> {
                     adapter.replaceData(beaconXInfos);
                     tvDeviceNum.setText(String.format("DEVICE(%d)", beaconXInfos.size()));
                 });
                 try {
-                    Thread.sleep(500);
+                    Thread.sleep(3000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
