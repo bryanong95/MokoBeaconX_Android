@@ -373,7 +373,6 @@ public class MainActivity extends BaseActivity implements MokoScanDeviceCallback
                 count = count+1;
             }
         }
-        System.out.println(Beacon);
         postRequest(Beacon.toString(),url);
     }
 
@@ -632,12 +631,9 @@ public class MainActivity extends BaseActivity implements MokoScanDeviceCallback
     }
 
     private void postRequest(String json, String URL){
-        System.out.println(URL);
-        System.out.println(json);
         RequestBody requestBody = buildRequestBody(json);
         OkHttpClient okHttpClient = new OkHttpClient();
         long start = System.currentTimeMillis();
-        System.out.println(requestBody);
         Request request = new Request
                 .Builder()
                 .post(requestBody)
@@ -661,12 +657,6 @@ public class MainActivity extends BaseActivity implements MokoScanDeviceCallback
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-//                        try {
-//                            Toast.makeText(MainActivity.this, response.body().string(), Toast.LENGTH_LONG).show();
-//                        } catch (IOException e) {
-//                            e.printStackTrace();
-//                        }
-                        System.out.println(response.toString());
                         isSending = true;
                     }
                 });
